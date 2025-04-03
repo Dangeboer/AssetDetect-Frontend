@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Modal, Form, Input, Button, Radio, message } from "antd";
 import { login, register } from "../utils";
 
-const LoginRegister = ({ visible, onClose, onLoginSuccess }) => {
+const LoginRegisterModal = ({ visible, onClose, onLoginSuccess }) => {
   const [isRegister, setIsRegister] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -84,4 +84,4 @@ const LoginRegister = ({ visible, onClose, onLoginSuccess }) => {
   );
 };
 
-export default LoginRegister;
+export default LoginRegisterModal;
