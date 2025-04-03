@@ -3,13 +3,15 @@ import { Modal, Form, Input, Button, Radio, message } from "antd";
 import { login, register } from "../utils";
 
 const LoginRegisterModal = ({ visible, onClose, onLoginSuccess }) => {
-  const [isRegister, setIsRegister] = useState(false);
+  const [isRegister, setIsRegister] = useState(false); // 控制当前是登录还是注册模式，默认为登录
   const [loading, setLoading] = useState(false);
 
+  // 用来切换 isRegister 状态，改变是显示登录还是注册表单，其实就是反转 isRegister 状态
   const handleSwitch = () => {
     setIsRegister(!isRegister);
   };
 
+  // 表单提交的处理函数，接收表单的 values 作为参数
   const handleSubmit = async (values) => {
     setLoading(true);
     try {
@@ -21,9 +23,20 @@ const LoginRegisterModal = ({ visible, onClose, onLoginSuccess }) => {
       } else {
         // 登录逻辑
         const token = await login(values.username, values.password);
-        localStorage.setItem("token", token);
-        message.success("登录成功！");
-        onLoginSuccess();
+
+        console.log("Token from login:", token); // 确保 token 是有效的
+
+        if (token) {
+          localStorage.setItem("token", token); // 存储 token
+          console.log(
+            "Stored token in localStorage:",
+            localStorage.getItem("token")
+          ); // 确认存储
+          message.success("登录成功！");
+          onLoginSuccess(token);
+        } else {
+          message.error("登录失败，未获取到 token！");
+        }
       }
     } catch (error) {
       message.error(isRegister ? "注册失败！" : "登录失败！");

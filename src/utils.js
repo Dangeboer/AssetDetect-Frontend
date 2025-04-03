@@ -18,6 +18,7 @@ export const login = async (username, password) => {
     }
 
     const data = await response.json();
+    console.log("Login response data:", data.token);  // 打印返回的数据
     return data.token; // 返回JWT
   } catch (error) {
     console.error(error);
@@ -48,21 +49,23 @@ export const register = async (username, password, role) => {
 };
 
 // 资产探测函数
-export const probeAssets = async (assets) => {
+export const probeAssets = async (assets, token) => {
   try {
+    
     const response = await fetch(`${SERVER_ORIGIN}/asset`, {
-      method: "GET",
+      method: "POST", // 改为 POST 请求
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(assets),
+      body: JSON.stringify(assets), // 将 assets 列表传递到后端
     });
 
     if (!response.ok) {
       throw new Error("资产探测失败！");
     }
 
-    const data = await response.json();
+    const data = await response.json(); // 返回的响应数据是 List<AssetResponse>
     return data; // 返回探测结果
   } catch (error) {
     console.error(error);

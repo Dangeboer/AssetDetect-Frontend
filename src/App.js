@@ -11,9 +11,10 @@ const App = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // **添加 useEffect，在页面加载时检查 localStorage**
+  // 添加 useEffect，在页面加载时检查 localStorage
   useEffect(() => {
     const token = localStorage.getItem("token");
+    console.log("useEffect token: " + token);
     if (token) {
       setIsLoggedIn(true);
     }
@@ -21,11 +22,14 @@ const App = () => {
 
   const showModal = () => setIsModalVisible(true);
   const handleCloseModal = () => setIsModalVisible(false);
+
   const handleLoginSuccess = (token) => {
     localStorage.setItem("token", token);
+    console.log("handleLoginSuccess tokne: " + localStorage.getItem("token"));
     setIsLoggedIn(true);
     setIsModalVisible(false);
   };
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     setIsLoggedIn(false);
@@ -71,7 +75,7 @@ const App = () => {
       <LoginRegisterModal
         visible={isModalVisible}
         onClose={handleCloseModal}
-        onLoginSuccess={handleLoginSuccess}
+        onLoginSuccess={handleLoginSuccess} // 将 handleLoginSuccess 作为回调传递
       />
     </Layout>
   );

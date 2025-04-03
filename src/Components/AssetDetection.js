@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Table, Button, Modal } from "antd";
+import { probeAssets } from "../utils"; // 导入 utils.js 中的 probeAssets 函数
 
 const AssetDetection = ({ isLoggedIn, showModal }) => {
   const [data, setData] = useState([
@@ -88,12 +89,32 @@ const AssetDetection = ({ isLoggedIn, showModal }) => {
       return;
     }
 
-    // 模拟 API 调用，更新资产状态
-    const updatedData = data.map((item) => ({
-      ...item,
-      status: Math.random() > 0.5 ? "存活" : "离线",
-    }));
-    setData(updatedData);
+    const addresses = data.map((item) => item.address); // 提取所有资产地址
+
+    try {
+      const token = localStorage.getItem("token");
+      console.log("token: " + token);
+      const assetResponses = await probeAssets(addresses, token); // 调用 probeAssets 函数进行资产探测
+
+      // 更新表格中的存活情况
+      const updatedData = data.map((item) => {
+        const response = assetResponses.find(
+          (response) => response.asset === item.address
+        );
+        return {
+          ...item,
+          status: response ? response.status : "未知", // 更新存活情况
+          message: response ? "探测完成" : "未知", // 更新说明
+        };
+      });
+
+      setData(updatedData); // 更新数据
+    } catch (error) {
+      Modal.error({
+        title: "资产探测失败",
+        content: "探测过程发生错误，请重试。",
+      });
+    }
   };
 
   const columns = [
