@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Table, Button, Modal } from "antd";
+import { Table, Button, Modal, Spin } from "antd";
 import { probeAssets } from "../utils"; // 导入 utils.js 中的 probeAssets 函数
 
 const AssetDetection = ({ isLoggedIn, showModal }) => {
@@ -77,6 +77,7 @@ const AssetDetection = ({ isLoggedIn, showModal }) => {
       message: "未知",
     },
   ]);
+  const [loading, setLoading] = useState(false);
 
   const handleDetection = async () => {
     if (!isLoggedIn) {
@@ -92,6 +93,7 @@ const AssetDetection = ({ isLoggedIn, showModal }) => {
     const addresses = data.map((item) => item.address); // 提取所有资产地址
 
     try {
+      setLoading(true);
       const token = localStorage.getItem("token");
       console.log("token: " + token);
       const assetResponses = await probeAssets(addresses, token); // 调用 probeAssets 函数进行资产探测
@@ -104,7 +106,7 @@ const AssetDetection = ({ isLoggedIn, showModal }) => {
         return {
           ...item,
           status: response ? response.status : "未知", // 更新存活情况
-          message: response ? "探测完成" : "未知", // 更新说明
+          message: response ? response.message : "未知", // 更新说明
         };
       });
 
@@ -114,6 +116,8 @@ const AssetDetection = ({ isLoggedIn, showModal }) => {
         title: "资产探测失败",
         content: "探测过程发生错误，请重试。",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -128,14 +132,16 @@ const AssetDetection = ({ isLoggedIn, showModal }) => {
 
   return (
     <div>
-      <Button
-        type="primary"
-        onClick={handleDetection}
-        style={{ marginBottom: "16px" }}
-      >
-        进行资产探测
-      </Button>
-      <Table columns={columns} dataSource={data} />
+      <Spin spinning={loading}>
+        <Button
+          type="primary"
+          onClick={handleDetection}
+          style={{ marginBottom: "16px" }}
+        >
+          进行资产探测
+        </Button>
+        <Table columns={columns} dataSource={data} />
+      </Spin>
     </div>
   );
 };

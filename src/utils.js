@@ -18,7 +18,7 @@ export const login = async (username, password) => {
     }
 
     const data = await response.json();
-    console.log("Login response data:", data.token);  // 打印返回的数据
+    console.log("Login response data:", data.token); // 打印返回的数据
     return data.token; // 返回JWT
   } catch (error) {
     console.error(error);
@@ -27,9 +27,11 @@ export const login = async (username, password) => {
 };
 
 // 注册函数
+const registerUrl = `${SERVER_ORIGIN}/auth/register`;
+
 export const register = async (username, password, role) => {
   try {
-    const response = await fetch(`${SERVER_ORIGIN}/auth/register`, {
+    const response = await fetch(registerUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -49,11 +51,12 @@ export const register = async (username, password, role) => {
 };
 
 // 资产探测函数
+const probeAssetsUrl = `${SERVER_ORIGIN}/asset`;
+
 export const probeAssets = async (assets, token) => {
   try {
-    
-    const response = await fetch(`${SERVER_ORIGIN}/asset`, {
-      method: "POST", // 改为 POST 请求
+    const response = await fetch(probeAssetsUrl, {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
