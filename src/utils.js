@@ -3,77 +3,69 @@ const SERVER_ORIGIN = ""; // 服务器地址
 // 登录函数
 const loginUrl = `${SERVER_ORIGIN}/auth/login`;
 
-export const login = (username, password) => {
-  return fetch(loginUrl, {
+export const login = async (username, password) => {
+  const response = await fetch(loginUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ username, password }),
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw Error("登录失败！");
-      }
+  });
 
-      return response.json();
-    })
-    .then((data) => {
-      return data.token;
-    })
-    .catch((error) => {
-      console.error(error);
-      throw error; // 如果需要将错误继续传递
-    });
+  if (!response.ok) {
+    const errData = await response.json();
+    throw new Error(errData.message || "登录失败！");
+  }
+
+  const data = await response.json();
+  return data.token; // 返回JWT
 };
 
 // 注册函数
 const registerUrl = `${SERVER_ORIGIN}/auth/register`;
 
-export const register = (username, password, role) => {
-  return fetch(registerUrl, {
+export const register = async (username, password, role) => {
+  const response = await fetch(registerUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ username, password, role }),
-  })
-    .then((response) => {
-      if (!response.ok) {
-        return response.json().then((errorData) => {
-          throw new Error(errorData.message);
-        });
-      }
+  });
 
-      return "注册成功！";
-    })
-    .catch((error) => {
-      console.error(error);
-      throw error; // 如果需要将错误继续传递
-    });
+  if (!response.ok) {
+    const errData = await response.json();
+    throw new Error(errData.message || "注册失败！");
+  }
+
+  return "注册成功！";
 };
 
 // 资产探测函数
 const probeAssetsUrl = `${SERVER_ORIGIN}/asset`;
 
-export const probeAssets = (assets, token) => {
-  return fetch(probeAssetsUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(assets), // 将 assets 列表传递到后端
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("资产探测失败！");
-      }
-
-      return response.json(); // 返回的响应数据是 List<AssetResponse>
-    })
-    .catch((error) => {
-      console.error(error);
-      throw Error("资产探测请求失败！");
+export const probeAssets = async (assets, token, signal) => {
+  try {
+    const response = await fetch(probeAssetsUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(assets), // 将 assets 列表传递到后端
+      signal, // 添加 signal 用于中止请求
     });
+
+    if (!response.ok) {
+      const errData = await response.json();
+      throw new Error(errData.message || "探测失败！");
+    }
+
+    const data = await response.json(); // 返回的响应数据是 List<AssetResponse>
+    return data; // 返回探测结果
+  } catch (error) {
+    if (error.name !== "AbortError") {
+      throw error; // 重新抛出错误
+    }
+  }
 };

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import "antd/dist/antd.min.css";
+import React, { useState, useEffect, useRef } from "react";
 import { Layout, Button, Typography, message } from "antd";
 import Sidebar from "./Components/Sidebar";
 import AssetDetection from "./Components/AssetDetection";
@@ -9,31 +10,35 @@ const { Title } = Typography;
 
 const App = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const showModal = () => setIsModalVisible(true);
-  const handleCloseModal = () => setIsModalVisible(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    localStorage.getItem("token") !== null
+  );
+  const [assetDetectionKey, setAssetDetectionKey] = useState(Date.now()); // 设置 key 用于刷新 AssetDetection
 
-  // 添加 useEffect，在页面加载时检查 localStorage
+  const hasShownMessage = useRef(false);
+
   useEffect(() => {
-    message.success("组件加载完成！");
-    const token = localStorage.getItem("token");
-    // console.log("useEffect token: " + token);
-    if (token) {
-      setIsLoggedIn(true);
+    if (!hasShownMessage.current) {
+      message.success("组件加载完成！");
+      hasShownMessage.current = true;
     }
   }, []);
 
   const handleLoginSuccess = (token) => {
     localStorage.setItem("token", token);
-    // console.log("handleLoginSuccess tokne: " + localStorage.getItem("token"));
     setIsLoggedIn(true);
+    setAssetDetectionKey(Date.now());
     setIsModalVisible(false);
   };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     setIsLoggedIn(false);
+    message.success("已退出登录");
   };
+
+  const showModal = () => setIsModalVisible(true);
+  const handleCloseModal = () => setIsModalVisible(false);
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -68,14 +73,18 @@ const App = () => {
         </Sider>
 
         <Content style={{ padding: "20px" }}>
-          <AssetDetection isLoggedIn={isLoggedIn} showModal={showModal} />
+          <AssetDetection
+            key={assetDetectionKey} // 强制刷新
+            isLoggedIn={isLoggedIn}
+            showModal={showModal}
+          />
         </Content>
       </Layout>
 
       <LoginRegisterModal
         visible={isModalVisible}
         onClose={handleCloseModal}
-        onLoginSuccess={handleLoginSuccess} // 将 handleLoginSuccess 作为回调传递
+        onLoginSuccess={handleLoginSuccess}
       />
     </Layout>
   );

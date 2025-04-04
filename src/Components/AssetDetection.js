@@ -1,9 +1,9 @@
-import React, { useState } from "react";
-import { Table, Button, Modal, Spin } from "antd";
-import { probeAssets } from "../utils"; // 导入 utils.js 中的 probeAssets 函数
+import React, { useState, useEffect } from "react";
+import { Table, Button, Modal, message } from "antd";
+import { probeAssets } from "../utils";
 
 const AssetDetection = ({ isLoggedIn, showModal }) => {
-  const [data, setData] = useState([
+  const initialData = [
     {
       key: "1",
       type: "信息系统",
@@ -76,43 +76,73 @@ const AssetDetection = ({ isLoggedIn, showModal }) => {
       status: "未知",
       message: "未知",
     },
-  ]);
-  const [loading, setLoading] = useState(false);
+  ];
 
+  const [data, setData] = useState(initialData);
+  const [loading, setLoading] = useState(false);
+  const [abortController, setAbortController] = useState(null);
+
+  // 监听 isLoggedIn 状态变化，退出登录时清除数据
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setData(initialData); // 重置为初始数据
+    }
+  }, [isLoggedIn, initialData]);
+
+  // 探测函数
   const handleDetection = async () => {
     if (!isLoggedIn) {
-      showModal() // 点击确定后打开登录框
+      Modal.warning({
+        title: "需要登录",
+        content: "请先登录再进行资产探测",
+        okText: "去登录",
+        onOk: () => showModal(),
+      });
       return;
     }
 
-    const addresses = data.map((item) => item.address); // 提取所有资产地址
+    const addresses = data.map((item) => item.address);
+    const controller = new AbortController();
+    setAbortController(controller); // 保存控制器
 
+    setLoading(true); // 开始加载
     try {
-      setLoading(true);
       const token = localStorage.getItem("token");
-      console.log("token: " + token);
-      const assetResponses = await probeAssets(addresses, token); // 调用 probeAssets 函数进行资产探测
+      const assetResponses = await probeAssets(
+        addresses,
+        token,
+        controller.signal
+      );
 
-      // 更新表格中的存活情况
+      // 更新数据
       const updatedData = data.map((item) => {
         const response = assetResponses.find(
           (response) => response.asset === item.address
         );
         return {
           ...item,
-          status: response ? response.status : "未知", // 更新存活情况
-          message: response ? response.message : "未知", // 更新说明
+          status: response ? response.status : "未知",
+          message: response ? response.message : "未知",
         };
       });
 
-      setData(updatedData); // 更新数据
+      setData(updatedData); // 更新表格
+      message.success("探测完成");
     } catch (error) {
-      Modal.error({
-        title: "资产探测失败",
-        content: "探测过程发生错误，请重试。",
-      });
+      if (error.name === "AbortError") {
+        message.warning("探测已中止");
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 中止探测
+  const handleAbort = () => {
+    if (abortController) {
+      abortController.abort();
+      setData(initialData); // 恢复初始数据
+      message.warning("探测已中止");
     }
   };
 
@@ -127,16 +157,36 @@ const AssetDetection = ({ isLoggedIn, showModal }) => {
 
   return (
     <div>
-      <Spin spinning={loading}>
-        <Button
-          type="primary"
-          onClick={handleDetection}
-          style={{ marginBottom: "16px" }}
+      <Button
+        type="primary"
+        onClick={handleDetection}
+        style={{ marginBottom: "16px" }}
+        disabled={loading}
+      >
+        进行资产探测
+      </Button>
+
+      <Table columns={columns} dataSource={data} />
+
+      {loading && (
+        <Modal
+          open={true}
+          title="正在探测中，请稍后..."
+          footer={null}
+          closable={false}
+          maskClosable={false}
+          centered
         >
-          进行资产探测
-        </Button>
-        <Table columns={columns} dataSource={data} />
-      </Spin>
+          <Button
+            type="danger"
+            onClick={handleAbort}
+            style={{ width: "100%" }}
+            disabled={!loading}
+          >
+            中止探测
+          </Button>
+        </Modal>
+      )}
     </div>
   );
 };
