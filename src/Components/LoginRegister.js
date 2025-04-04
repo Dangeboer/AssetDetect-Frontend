@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Modal, Form, Input, Button, Radio, message } from "antd";
+import { Modal, Form, Input, Button, Radio } from "antd";
+import { message } from "antd";
 import { login, register } from "../utils";
 
 const LoginRegisterModal = ({ visible, onClose, onLoginSuccess }) => {
@@ -17,21 +18,23 @@ const LoginRegisterModal = ({ visible, onClose, onLoginSuccess }) => {
     try {
       if (isRegister) {
         // 注册逻辑
+        console.log("注册操作开始");
         await register(values.username, values.password, values.role);
+        console.log("注册操作完成");
         message.success("注册成功！");
         setIsRegister(false); // 注册成功后切换回登录模式
       } else {
         // 登录逻辑
         const token = await login(values.username, values.password);
 
-        console.log("Token from login:", token); // 确保 token 是有效的
+        // console.log("Token from login:", token); // 确保 token 是有效的
 
         if (token) {
           localStorage.setItem("token", token); // 存储 token
-          console.log(
-            "Stored token in localStorage:",
-            localStorage.getItem("token")
-          ); // 确认存储
+          // console.log(
+          //   "Stored token in localStorage:",
+          //   localStorage.getItem("token")
+          // ); // 确认存储
           message.success("登录成功！");
           onLoginSuccess(token);
         } else {
@@ -39,7 +42,11 @@ const LoginRegisterModal = ({ visible, onClose, onLoginSuccess }) => {
         }
       }
     } catch (error) {
-      message.error(isRegister ? "注册失败！" : "登录失败！");
+      console.log("注册失败");
+      Modal.error({
+        title: isRegister ? "注册失败" : "登录失败",
+        content: error.message,
+      });
     } finally {
       setLoading(false);
     }

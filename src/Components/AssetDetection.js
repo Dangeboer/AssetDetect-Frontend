@@ -81,12 +81,7 @@ const AssetDetection = ({ isLoggedIn, showModal }) => {
 
   const handleDetection = async () => {
     if (!isLoggedIn) {
-      Modal.warning({
-        title: "需要登录",
-        content: "请先登录再进行资产探测",
-        okText: "去登录",
-        onOk: () => showModal(), // 点击确定后打开登录框
-      });
+      showModal() // 点击确定后打开登录框
       return;
     }
 

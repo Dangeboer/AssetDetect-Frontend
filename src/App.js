@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Layout, Button, Typography } from "antd";
+import { Layout, Button, Typography, message } from "antd";
 import Sidebar from "./Components/Sidebar";
 import AssetDetection from "./Components/AssetDetection";
 import LoginRegisterModal from "./Components/LoginRegister";
@@ -10,22 +10,22 @@ const { Title } = Typography;
 const App = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const showModal = () => setIsModalVisible(true);
+  const handleCloseModal = () => setIsModalVisible(false);
 
   // 添加 useEffect，在页面加载时检查 localStorage
   useEffect(() => {
+    message.success("组件加载完成！");
     const token = localStorage.getItem("token");
-    console.log("useEffect token: " + token);
+    // console.log("useEffect token: " + token);
     if (token) {
       setIsLoggedIn(true);
     }
   }, []);
 
-  const showModal = () => setIsModalVisible(true);
-  const handleCloseModal = () => setIsModalVisible(false);
-
   const handleLoginSuccess = (token) => {
     localStorage.setItem("token", token);
-    console.log("handleLoginSuccess tokne: " + localStorage.getItem("token"));
+    // console.log("handleLoginSuccess tokne: " + localStorage.getItem("token"));
     setIsLoggedIn(true);
     setIsModalVisible(false);
   };
@@ -63,7 +63,7 @@ const App = () => {
       </Header>
 
       <Layout>
-        <Sider>
+        <Sider width={150} collapsedWidth={80} breakpoint="lg">
           <Sidebar defaultSelected="asset-detection" />
         </Sider>
 
